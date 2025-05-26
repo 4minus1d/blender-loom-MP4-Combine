@@ -3961,13 +3961,17 @@ class LOOM_OT_render_image_sequence(bpy.types.Operator):
             self._folder,
             f"{self._filename.rstrip('_')}.mp4")
 
-        fps = bpy.context.scene.render.fps
+        scene = bpy.context.scene
+        fps = scene.render.fps
+        width = int(scene.render.resolution_x * scene.render.resolution_percentage / 100)
+        height = int(scene.render.resolution_y * scene.render.resolution_percentage / 100)
 
         try:
             subprocess.run([
                 ffmpeg_bin,
                 "-y",
                 "-framerate", str(fps),
+                "-video_size", f"{width}x{height}",
                 "-i", pattern,
                 "-c:v", "libx264",
                 "-pix_fmt", "yuv420p",
@@ -4327,6 +4331,9 @@ class LOOM_OT_render_flipbook(bpy.types.Operator):
             else:
                 skipped = ','.join(map(str, self._skipped_frames))
             self.report({'ERROR'}, "Frame(s) {} skipped (would overwrite existing file(s))".format(skipped))
+
+        # Combine the rendered sequence into an mp4 for quick preview
+        self.combine_to_mp4()
 
     def execute(self, context):
         scn = context.scene
