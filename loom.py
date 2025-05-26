@@ -3946,6 +3946,37 @@ class LOOM_OT_render_image_sequence(bpy.types.Operator):
         render.padded_zeros = self.digits if not self._dec else self.digits + self._dec
         render.image_format = self._extension
 
+    def combine_to_mp4(self):
+        """Combine rendered image sequence to an mp4 using ffmpeg"""
+        prefs = bpy.context.preferences.addons[__name__].preferences
+        ffmpeg_bin = prefs.ffmpeg_path if prefs.ffmpeg_path else "ffmpeg"
+        if ffmpeg_bin != "ffmpeg":
+            ffmpeg_bin = os.path.realpath(bpy.path.abspath(ffmpeg_bin))
+
+        pattern = os.path.join(
+            self._folder,
+            f"{self._filename}%0{self.digits}d.{self._extension}")
+
+        mp4_path = os.path.join(
+            self._folder,
+            f"{self._filename.rstrip('_')}.mp4")
+
+        fps = bpy.context.scene.render.fps
+
+        try:
+            subprocess.run([
+                ffmpeg_bin,
+                "-y",
+                "-framerate", str(fps),
+                "-i", pattern,
+                "-c:v", "libx264",
+                "-pix_fmt", "yuv420p",
+                mp4_path
+            ], check=True)
+            self.report({'INFO'}, f"Combined MP4 saved to {mp4_path}")
+        except Exception as e:
+            self.report({'WARNING'}, f"Failed to combine mp4: {e}")
+
     def final_report(self):
         if self._rendered_frames:
             frame_count = len(self._rendered_frames)
@@ -3967,8 +3998,11 @@ class LOOM_OT_render_image_sequence(bpy.types.Operator):
                 skipped = ','.join(map(str, self._skipped_frames))
             
             self.report(
-                {'WARNING'}, 
+                {'WARNING'},
                 "Frame(s): {} skipped (would overwrite existing file(s))".format(skipped))
+
+        # Combine the rendered sequence into an mp4 for quick preview
+        self.combine_to_mp4()
 
     def execute(self, context):
         scn = context.scene
