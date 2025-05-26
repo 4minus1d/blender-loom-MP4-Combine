@@ -1,3 +1,5 @@
+Fork Note: It also combines the sequence to an mp4 for a quick preview
+
 # Loom
 
 Loom is a Blender addon designed to simplify the process of rendering *image sequences* and *specific frames*.
