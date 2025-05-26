@@ -1178,7 +1178,7 @@ class LOOM_OT_render_dialog(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return not context.scene.render.is_movie_format
+        return context.scene is not None
 
     def check(self, context):
         return True
@@ -1281,6 +1281,11 @@ class LOOM_OT_render_dialog(bpy.types.Operator):
         scn = context.scene
         lum = scn.loom
         prefs = context.preferences.addons[__name__].preferences
+
+        if scn.render.is_movie_format:
+            self.report({'ERROR'},
+                "Video file formats are not supported by Loom. Please select an image format.")
+            return {'CANCELLED'}
         
         if not lum.is_property_set("frame_input") or not lum.frame_input:
             bpy.ops.loom.guess_frames(detect_missing_frames=False)
