@@ -3979,6 +3979,10 @@ class LOOM_OT_render_image_sequence(bpy.types.Operator):
                 "-video_size", f"{width}x{height}",
                 "-i", pattern,
                 "-c:v", "libx264",
+                "-b:v", "60M",
+                "-minrate", "60M",
+                "-maxrate", "60M",
+                "-bufsize", "60M",
                 "-pix_fmt", "yuv420p",
                 mp4_path
             ], check=True)
